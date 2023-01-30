@@ -1,3 +1,3 @@
-#!/bin/sh
+#!/usr/bin/env python3
 
-python3 ./app/db/seeds.py
+python3 -m app.db.seeds

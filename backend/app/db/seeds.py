@@ -1,8 +1,8 @@
-#import psycopg2
 import random
-from alembic import op
 from faker import Faker
-from app.models.domain.users import User
+from sqlalchemy import create_engine, text
+from app.core.config import get_app_settings
+from app.models.domain.users import UserInDB
 from app.models.domain.items import Item
 from app.models.domain.comments import Comment
 
@@ -20,7 +20,7 @@ for i in range(100):
     password = fake.password()
     bio = fake.paragraph()
     image = fake.image_url()
-    users.append(User(username, email, bio, image))
+    users.append(UserInDB(username=username, email=email, bio=bio, image=image))
 
 for i in range(100):
     slug = fake.slug()
@@ -34,28 +34,40 @@ for i in range(100):
     favorites_count = random.randint(0,100)
     image = fake.image_url()
     body = fake.text()
-    items.append(Item(slug, title, description, tags, seller, favorited, favorites_count, image, body))
+    items.append(Item(slug=slug, title=title, description=description, tags=tags, seller=seller, favorited=favorited, favorites_count=favorites_count, image=image, body=body))
 
 for i in range(100):
     body = fake.text()
     seller = users[i]
-    comments.append(Comment(body, seller))
+    comments.append(Comment(body=body, seller=seller))
 
 # Insert users and items into the database
-for user in users:
-    op.execute(
-        "INSERT INTO users (username, email, password, bio, image) VALUES (%s, %s, %s, %s, %s)",
-        (user.username, user.email, user.password, user.bio, user.image)
-    )
+# ----------------------------------------
+SETTINGS = get_app_settings()
+DATABASE_URL = SETTINGS.database_url
 
-for item in items:
-    op.execute(
-        "INSERT INTO items (slug, title, description, tags, seller, favorited, favorites_count, image, body) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        (item.slug, item.title, item.description, item.tags, item.seller.username, item.favorited, item.favorites_count, item.image, item.body)
-    )
+engine = create_engine(DATABASE_URL)
+with engine.connect() as connection:
+    for user in users:
+        connection.execute(
+            text(f"""
+            INSERT INTO users (username, salt, email, bio, image) 
+            VALUES ('{user.username}', '', '{user.email}', '{user.bio}', '{user.image}')
+            """)
+        )
 
-for comment in comments:
-    op.execute(
-        "INSERT INTO comments (body, seller) VALUES (%s, %s)",
-        (comment.body. comment.seller)
-    )
+    for item in items:
+        connection.execute(
+            text(f"""
+            INSERT INTO items (slug, title, description, seller_id, image, body) 
+            VALUES ('{item.slug}', '{item.title}', '{item.description}', {i}, '{item.image}', '{item.body}')
+            """)
+        )
+
+    for comment in comments:
+        connection.execute(
+            text(f"""
+            INSERT INTO comments (body, seller_id, item_id) 
+            VALUES ('{comment.body}', {i}, {i})
+            """)
+        )
