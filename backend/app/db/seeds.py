@@ -55,12 +55,16 @@ with engine.connect() as connection:
             VALUES ('{user.username}', '', '{user.email}', '{user.bio}', '{user.image}')
             """)
         )
+        HASHED_PASSWORD='9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08'
+        connection.execute(
+            text(f"UPDATE users SET salt = 'test', hashed_password = '{HASHED_PASSWORD}'")
+        )
 
     for item in items:
         connection.execute(
             text(f"""
             INSERT INTO items (slug, title, description, seller_id, image, body) 
-            VALUES ('{item.slug}', '{item.title}', '{item.description}', {i}, '{item.image}', '{item.body}')
+            VALUES ('{item.slug}', '{item.title}', '{item.description}', 1, '{item.image}', '{item.body}')
             """)
         )
 
