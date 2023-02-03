@@ -20,7 +20,7 @@ const LoggedOutView = () => {
   );
 };
 
-const LoggedInView = (currentUser) => {
+const LoggedInView = ({currentUser}) => {
   return (
     <ul className="navbar-nav ml-auto">
       <li className="nav-item">
